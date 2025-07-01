@@ -7,6 +7,6 @@ import com.project.stock.demo_stock_heatmap.model.StockQuoteDTO;
 public interface StockService {
   List<StockQuoteDTO> fetchStockData();
 
-  StockMKTCap fetchStockMC();
+  List<StockMKTCap> fetchStockMC();
 
 }
