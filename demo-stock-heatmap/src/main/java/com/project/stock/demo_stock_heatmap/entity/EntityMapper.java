@@ -1,21 +1,18 @@
 package com.project.stock.demo_stock_heatmap.entity;
 
-import java.util.Comparator;
 import org.springframework.stereotype.Component;
-import com.project.stock.demo_stock_heatmap.model.StockMKTCap;
+import com.project.stock.demo_stock_heatmap.model.StockQuoteDTO;
 
 @Component
 public class EntityMapper {
 
-  public NDX100Entity map(StockMKTCap sCap) {
-
-    StockMKTCap.MarketCap maxMarketCap = sCap.getMarketCaps().stream()
-        .max(Comparator.comparing((StockMKTCap.MarketCap::getDate)))
-        .orElseThrow(
-            () -> new IllegalArgumentException("No market cap data available"));
-
-    return NDX100Entity.builder().symbol(sCap.getMeta().getSymbol())
-        .date(maxMarketCap.getDate()).marketCap(maxMarketCap.getValue())
-        .build();
+  public NDX100QuoteEntity map(StockQuoteDTO quote) {
+    return NDX100QuoteEntity.builder()
+    .datetime(quote.getDatetime())
+    .fiftyTwoHigh(quote.getFiftyTwoWeek().getHigh())
+    .fiftyTwoLow(quote.getFiftyTwoWeek().getLow())
+    .name(quote.getName())
+    .symbol(quote.getSymbol())
+    .build();
   }
 }

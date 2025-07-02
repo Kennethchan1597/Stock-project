@@ -1,6 +1,7 @@
 package com.project.stock.demo_stock_heatmap.model;
 
 import java.time.LocalDate;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,6 +17,7 @@ public class StockQuoteDTO {
   @JsonProperty(value = "mic_code")
   private String micCode;
   private String currency;
+  @JsonFormat(pattern = "yyyy-MM-dd")
   private LocalDate datetime;
   private Long timestamp;
   @JsonProperty(value = "last_quote_at")

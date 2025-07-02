@@ -6,6 +6,35 @@ twelvedata:
     scheme: https
     host: api.twelvedata.com
     endpoints:
-      quote: "quote"
-      marketCap: "market_cap"
+      quote: quote
+      marketCap: market_cap
     key: 3b4c1a0bd9de4b5fb77e842e89487c4c
+
+alphavantagedata:
+  api:
+    scheme: https
+    host: alphavantage.co
+    endpoints:
+      query: query
+    function: OVERVIEW
+    key: XTXOJTEUX9LM3PFZ
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/bc2504
+    username: postgres
+    password: admin1234
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 6000
+# https://www.alphavantage.co/query?function=OVERVIEW&symbol=GOOG&apikey=XTXOJTEUX9LM3PFZ
+# XTXOJTEUX9LM3PFZ
