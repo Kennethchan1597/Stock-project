@@ -21,17 +21,15 @@ alphavantagedata:
 
 spring:
   datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/bc2504
-    username: postgres
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/bc2504
+    username: root
     password: admin1234
   jpa:
     show-sql: true
     hibernate:
       ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+    databasePlatform: org.hibernate.dialect.MySQL8Dialect
   redis:
     host: localhost
     port: 6379

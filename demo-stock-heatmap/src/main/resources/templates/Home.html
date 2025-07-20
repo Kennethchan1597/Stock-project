@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <title>Heatmap</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: rgb(255, 255, 255);
+      background-image: url('/images/dg.jpg');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-attachment: fixed;
+      background-size: cover;
+    }
+
+    .heatmap-container {
+      padding-right: 7%;
+      padding-left: 12%;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .stock-box {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      width: 180px;
+      height: 120px;
+      box-sizing: border-box;
+      text-align: center;
+      position: relative;
+      cursor: pointer;
+      box-shadow: 10px 20px 80px rgb(0, 0, 0);
+    }
+
+    .stock-name {
+      font-weight: bold;
+    }
+
+    .tooltip-box {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #2a2a2a;
+      color: rgb(255, 255, 255);
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      z-index: 10;
+      white-space: nowrap;
+      text-align: left;
+      margin-top: 10px;
+    }
+
+    .stock-box:hover {
+      transform: translateY(-3px);
+      box-shadow: 0px 4px 20px #636262;
+      z-index: 1;
+    }
+
+    .stock-box:hover .tooltip-box {
+      display: block;
+      z-index: 10;
+    }
+
+    .tooltip-row {
+      margin: 2px 0;
+    }
+
+    .header {
+      color: #ffffff;
+      text-align: center;
+      display: block;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    .navbutton {
+      display: inline-block;
+      text-align: center;
+      color: rgb(103, 103, 255);
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      padding: 10px;
+      background-color: white;
+      border-radius: 12px;
+      width: fit-content;
+      margin: 0 auto 15px auto;
+    }
+
+    .navbutton:hover {
+      box-sizing: border-box;
+      box-shadow: 0px 4px 8px rgb(152, 193, 243);
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1 class="header">US Stock Market</h1>
+
+  <div class="navbar">
+    <nav>
+      <div class="navbutton">
+        <a href="/stock/heatmap">
+          <i class="fas fa-chart-line"></i>
+          <span>Heatmap</span>
+        </a>
+      </div>
+    </nav>
+  </div>
+
+  <div class="heatmap-container">
+
+    <div th:each="stock : ${stocks}" class="stock-box" th:style="'background-color:' + 
+       (${stock.percentChange} > 5 ? '#0aff33' :
+       (${stock.percentChange} > 4 ? '#2eff51' :
+       (${stock.percentChange} > 3 ? '#47ff65' :
+       (${stock.percentChange} > 0 ? '#6dff85' :
+       (${stock.percentChange} > -2 ? '#ff4f4f' :
+       'red')))))
+       ">
+
+      <a th:href="'/stock/candlestick/month/' + ${stock.symbol}" style="text-decoration: none;">
+        <img th:src="${stock.logoPath}" alt="Logo" style="width: 40px; height: 40px;"
+          onerror="this.src='/StockLogo/default.png'" />
+
+        <div class="stock-name" th:text="${stock.symbol}"></div>
+        <div th:text="${stock.percentChange} + '%'"></div>
+        <div th:text="${stock.marketCap}"></div>
+      </a>
+
+      <div class="tooltip-box">
+        <div class="tooltip-row" th:text="'Name: ' + ${stock.name}"></div>
+        <div class="tooltip-row" th:text="'Date: ' + ${stock.datetime}"></div>
+        <div class="tooltip-row" th:text="'High: ' + ${stock.high}"></div>
+        <div class="tooltip-row" th:text="'Low: ' + ${stock.low}"></div>
+        <div class="tooltip-row" th:text="'52W High: ' + ${stock.fiftyTwoHigh}"></div>
+        <div class="tooltip-row" th:text="'52W Low: ' + ${stock.fiftyTwoLow}"></div>
+        <div class="tooltip-row" th:text="'Prev Close: ' + ${stock.previousClose}"></div>
+        <div class="tooltip-row" th:text="'Avg Vol: ' + ${stock.avgVolume}"></div>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+
+</html>

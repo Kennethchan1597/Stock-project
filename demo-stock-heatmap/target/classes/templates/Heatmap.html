@@ -1,14 +1,304 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>Heatmap</title>
+  <meta charset="utf-8">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: rgb(255, 255, 255);
+      background-image: url('/images/dg.jpg');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-attachment: fixed;
+      background-size: cover;
+    }
+
+    .header {
+      color: #ffffff;
+      text-align: center;
+      display: block;
+      box-sizing: border-box;
+      position: relative;
+      font-size: 35px;
+      padding: 15px;
+    }
+
+    #heatmap {
+      margin: 0 auto;
+      display: block;
+    }
+
+    .tooltip {
+      position: absolute;
+      background-color: #1e1c1c;
+      color: rgb(255, 255, 255);
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      z-index: 10;
+      white-space: nowrap;
+      text-align: left;
+      pointer-events: none;
+      display: none;
+    }
+
+    .node {
+      cursor: pointer;
+    }
+
+    .node:hover {
+      stroke-width: 3px;
+    }
+
+    .leaf text {
+      font-size: 12px;
+      fill: #000;
+    }
+
+    .navbutton {
+      display: inline-block;
+      text-align: center;
+      color: rgb(103, 103, 255);
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      padding: 10px;
+      background-color: white;
+      border-radius: 12px;
+      width: fit-content;
+      margin: 0 auto 15px;
+    }
+
+    .navbutton:hover {
+      box-sizing: border-box;
+      box-shadow: 0px 4px 8px #98c1f3;
+      cursor: pointer;
+    }
+
+    .sector-label {
+      font-size: 13px;
+      fill: #ffffff;
+    }
+  </style>
 </head>
+
 <body>
-  
-  <h1>NDX100 heatmap</h1>
-  
+
+  <h1 class="header">US Stock Market Heatmap</h1>
+
+  <div class="navbar">
+    <nav>
+      <div class="navbutton">
+        <a href="/stock/home">
+          <i class="fas fa-home"></i>
+          <span>Home</span>
+        </a>
+      </div>
+    </nav>
+  </div>
+
+  <svg id="heatmap" width="1200" height="800"></svg>
+
+
+
+  <div class="tooltip"></div>
+
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+    var stocks = /*[[${stocks}]]*/[];
+    /*]]>*/
+
+    const fixedSectors = [
+      'Technology',
+      'Communication Services',
+      'Consumer Discretionary',
+      'Consumer',
+      'Healthcare',
+      'Industrials',
+      'Utilities'
+    ];
+
+    // Create hierarchical data with fixed sectors
+    const rootData = {
+      name: "root",
+      children: fixedSectors.map(sector => {
+        const sectorStocks = stocks.filter(s => s.sector === sector);
+        let children = sectorStocks.map(stock => ({
+          name: stock.symbol,
+          value: stock.marketCap,
+          percentChange: stock.percentChange,
+          logoPath: stock.logoPath,
+          data: stock // Store full data for tooltip
+        }));
+        // If no stocks, add a dummy to allocate minimal space
+        if (children.length === 0) {
+          children = [{
+            name: "empty",
+            value: 1e10, // Minimal value to show rectangle, adjust as needed based on scale
+            percentChange: 0,
+            logoPath: "",
+            data: {}
+          }];
+        }
+        return {
+          name: sector,
+          children: children
+        };
+      })
+    };
+
+
+
+    // Create D3 hierarchy
+    const root = d3.hierarchy(rootData)
+      .sum(d => d.value)
+      .sort((a, b) => b.value - a.value);
+
+    // Set up treemap layout
+    const treemap = d3.treemap()
+      .size([1200, 800])
+      .paddingOuter(3)
+      .paddingTop(20) // Space for sector labels
+      .paddingInner(1)
+      .round(true);
+
+    treemap(root);
+
+    // Color function based on percentChange
+    function getColor(percentChange) {
+      if (percentChange > 5) return '#0aff51';
+      if (percentChange > 4) return '#2eff51';
+      if (percentChange > 3) return '#47ff65';
+      if (percentChange > 0) return '#6dff85';
+      if (percentChange > -2) return '#ff4f4f';
+      return 'red';
+    }
+
+    // Select SVG
+    const svg = d3.select("#heatmap");
+
+    // Add groups for each node
+    const node = svg.selectAll("g")
+      .data(root.descendants())
+      .enter().append("g")
+      .attr("transform", d => `translate(${d.x0},${d.y0})`)
+      .attr("class", d => d.children ? "sector" : "leaf node");
+
+    // Add rectangles only for non-root nodes
+    node.filter(d => d.depth > 0)
+      .append("rect")
+      .attr("width", d => d.x1 - d.x0)
+      .attr("height", d => d.y1 - d.y0)
+      .attr("fill", d => d.children ? "#3e3e3e" : getColor(d.data.percentChange)) // Gray for sectors, colored for leaves
+      .attr("stroke", "#3e3e3e");
+
+    // Add sector labels only for depth 1 (sectors)
+    node.filter(d => d.depth === 1)
+      .append("text")
+      .attr("x", 10)
+      .attr("y", 14)
+      .attr("class", "sector-label")
+      .text(d => d.data.name);
+
+    // Add content only for non-empty leaves if box is large enough
+    const leafNodes = node.filter(d => !d.children && d.data.name !== "empty");
+    leafNodes.each(function (d) {
+      const width = d.x1 - d.x0;
+      const height = d.y1 - d.y0;
+
+      if (width > 37 && height > 45) {
+        // Add stock symbol
+        d3.select(this).append("text")
+          .attr("x", width / 2)
+          .attr("y", height / 2 - 10)
+          .attr("text-anchor", "middle")
+          .text(d.data.name);
+
+        // Add percent change
+        d3.select(this).append("text")
+          .attr("x", width / 2)
+          .attr("y", height / 2 + 5)
+          .attr("text-anchor", "middle")
+          .text(d.data.percentChange.toFixed(2) + '%');
+
+        // Add market cap
+        d3.select(this).append("text")
+          .attr("x", width / 2)
+          .attr("y", height / 2 + 20)
+          .attr("text-anchor", "middle")
+          .text(d3.format(".2s")(d.value));
+
+        // Add logo if space allows (original condition)
+        if (width > 40 && height > 50) {
+          d3.select(this).append("image")
+            .attr("href", d.data.logoPath)
+            .attr("x", width / 2 - 10)
+            .attr("y", 10)
+            .attr("width", 20)
+            .attr("height", 20)
+            .on("error", function () {
+              this.setAttribute("href", "/images/default.png");
+            });
+        }
+      }
+    });
+
+    // Tooltip
+    const tooltip = d3.select(".tooltip");
+
+    leafNodes
+      .on("mouseover", function (event, d) {
+        const stock = d.data.data;
+        const tooltipWidth = 200; // estimate width of tooltip box
+        const tooltipHeight = 150; // estimate height
+
+        let left = event.pageX + 10;
+        let top = event.pageY - 20;
+
+        // Check right edge overflow
+        if (left + tooltipWidth > window.innerWidth) {
+          left = event.pageX - tooltipWidth - 10;  // shift tooltip to left side
+        }
+
+        // Check bottom edge overflow
+        if (top + tooltipHeight > window.innerHeight) {
+          top = event.pageY - tooltipHeight - 10;  // shift tooltip up
+        }
+
+        tooltip.html(`
+  Name: ${stock.name}<br>
+  Date: ${stock.datetime}<br>
+  High: ${stock.high}<br>
+  Low: ${stock.low}<br>
+  52W High: ${stock.fiftyTwoHigh}<br>       <!-- corrected here -->
+  52W Low: ${stock.fiftyTwoLow}<br>         <!-- corrected here -->
+  Prev Close: ${stock.previousClose}<br>
+  Avg Vol: ${stock.avgVolume}
+`)
+          .style("left", left + "px")
+          .style("top", top + "px")
+          .style("display", "block");
+      })
+      // update "mousemove" similarly
+      .on("mousemove", function (event) {
+        // same reposition logic here
+      })
+      .on("mouseout", function () {
+        tooltip.style("display", "none");
+      });
+
+
+  </script>
 
 </body>
+
 </html>

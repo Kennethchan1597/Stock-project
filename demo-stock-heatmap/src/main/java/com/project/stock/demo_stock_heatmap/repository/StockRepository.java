@@ -6,5 +6,5 @@ import com.project.stock.demo_stock_heatmap.entity.NDX100QuoteEntity;
 
 @Repository
 public interface StockRepository extends JpaRepository<NDX100QuoteEntity, Long> {
-
+  NDX100QuoteEntity findBySymbol(String symbol);
 }

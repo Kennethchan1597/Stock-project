@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <title th:text="${symbol} + ' Candlestick Chart'">Candlestick Chart</title>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    
+    body {
+      background-image: url('/images/dg.jpg');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center center;
+    }
+
+    h1 {
+      color: #ffffff;
+      /* gold */
+      text-align: center;
+    }
+
+    #chart {
+      background-color: rgba(255, 255, 255, 0.9);
+      /* optional background for contrast */
+      border-radius: 12px;
+      padding: 60px;
+      margin: 40px;
+    }
+
+    .navbutton {
+      display: inline-block;
+      text-align: center;
+      color: rgb(103, 103, 255);
+    }
+
+    .navbar a {
+      padding: 10px;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      padding: 10px;
+      background-color: white;
+      border-radius: 12px;
+      width: fit-content;
+      margin: 0 auto 15px;
+    }
+
+    .navbutton:hover {
+      box-sizing: border-box;
+      box-shadow: 0px 4px 8px #98c1f3;
+      cursor: pointer;
+    }
+
+    .convert {
+      margin-left: 40px;
+    }
+
+    .convert a{
+      background-color: white;
+      border-radius: 8px;
+      padding: 8px;
+      text-decoration: none;
+    }
+
+  </style>
+</head>
+
+<body>
+  <h1 th:text="'Candlestick Chart for ' + ${symbol}">Candlestick Chart</h1>
+
+  <div class="navbar">
+    <nav>
+      <div class="navbutton">
+        <a href="/stock/home">
+          <i class="fas fa-home"></i>
+          <span>Home</span>
+        </a>
+        <a href="/stock/heatmap">
+          <i class="fas fa-chart-line"></i>
+          <span>Heatmap</span>
+        </a>
+      </div>
+    </nav>
+  </div>
+
+  <div class="convert">
+    <a th:href="@{'/stock/candlestick/day/' + ${symbol}}">Day</a>
+    <a th:href="@{'/stock/candlestick/month/' + ${symbol}}">Month</a>
+  </div>
+
+  <div id="chart"></div>
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+    var candleData = [
+      /*[# th:each="candle : ${candles}"]*/
+      {
+        x: new Date([[${ candle.date }]]),
+        y: [parseFloat([[${ candle.priceOpen }]]), parseFloat([[${ candle.high }]]), parseFloat([[${ candle.low }]]), parseFloat([[${ candle.priceClose }]])]
+      },
+      /*[/]*/
+    ];
+
+    // Sort data by date ascending
+    candleData.sort((a, b) => a.x - b.x);
+
+    var options = {
+      series: [{
+        data: candleData
+      }],
+      chart: {
+        type: 'candlestick',
+        height: 500
+      },
+      title: {
+        text: 'Weekly Candlestick Chart',
+        align: 'left'
+      },
+      xaxis: {
+        type: 'datetime'
+      },
+      yaxis: {
+        tooltip: {
+          enabled: true
+        }
+      },
+      plotOptions: {
+        candlestick: {
+          colors: {
+            upward: '#00B746',
+            downward: '#EF403C'
+          }
+        }
+      }
+    };
+
+    var chart = new ApexCharts(document.querySelector("#chart"), options);
+    chart.render();
+    /*]]>*/
+  </script>
+</body>
+
+</html>
